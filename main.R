@@ -1,6 +1,7 @@
 RNGkind(sample.kind = "Rounding") # for reproducibility in future versions of R
 
 # load relevant packages
+library(tidyverse)
 library(raster)
 library(rgdal)
 library(rgeos)
@@ -30,30 +31,11 @@ A <- readRDS("landsat8data.RDS")
 lcsfbr <- brick(A)
 
 # Crop Landsat
-
+source("getting_coords.R") # and coordinates
 # east, west, south, north extent for Gorongosa Paleontological Localities
-zone <- extent(672000, 678000, -2097000, -2091000)
-
 l_crop <- crop(lcsfbr, extent(zone))
 crs(l_crop)
 
-# get coordinates from Gorongosa
-coords <- as.data.frame(read_excel("gpl.xlsx"))
-
-# dataset cleaning and pre-processing
-coords_NOT <- coords[coords$`Fossil sites` == 'Non-localities' | coords$`Fossil sites` == 'Non-localities 18',]
-
-source('sorting_repeated_data.R')
-
-coo <- rbind(coords, coords_NOT)
-coo$`Fossil sites` <- factor(
-  coo$`Fossil sites`,
-  levels = c("Single vertebrate find",
-             "Vertebrates + Invertebrates",
-             "Invertebrates",
-             "Fossilized wood",
-             "Non-localities",
-             "Non-localities 2018"))
 
 #### CLUSTERING ####
 
@@ -81,7 +63,7 @@ cluster_spdf <- as(clustercover, "SpatialPixelsDataFrame")
 cluster_df <- as.data.frame(cluster_spdf)
 colnames(cluster_df) <- c("value", "longitude", "latitude")
 
-my_palette <- c("#fefff2", rev(viridis::viridis(n = 7)))
+my_palette <- c("#fefff2", rev(viridis::cividis(n = 7)))
 
 ds16_17 <- coo[-c(12:15),] # removes gpl 9 to 12b, because this is plot before going to the field
 ds16_17 <- ds16_17[ds16_17$`Fossil sites` != 'Non-localities 2018',]
@@ -97,19 +79,20 @@ ggplot() +
         color = `Fossil sites`,
         shape = `Fossil sites`,
         size = `Fossil sites`),
-    stroke = 1.5) +
-  scale_colour_manual(values = c(rep('#ff00de',3), '#3f2a14', 'red')) +
+    stroke = 1.75) +
+  scale_colour_manual(values = c(rep('#ff00de', 4), 'red')) +
   scale_shape_manual(values = c(1,21,22,25,4)) +
-  scale_size_manual(values = c(2,5,4,1,1)) +
+  scale_size_manual(values = c(3,5,5,2,1.5)) +
   theme_minimal() + labs(fill = 'k clusters')
 
-ggsave('kmeansGorongosa_Figure_02.tiff', last_plot(), width = 8, height = 6, device = 'tiff', scale = 1.3, dpi = 'retina', type = 'cairo')
+ggsave('kmeansGorongosa_Figure_02.png', last_plot(), width = 8, height = 6,
+       device = 'png', scale = 1.3, dpi = 'retina', type = 'cairo')
 
 # Figure 3
 
 cluster_df$value2 <- cluster_df$value != 1
 cluster_df$value2 <- as.factor(cluster_df$value2)
-levels(cluster_df$value2) <- c('Fossils (PREDICTION)', 'Other 7 clusters combined')
+levels(cluster_df$value2) <- c('Fossils (Prediction)', 'Other 7 clusters combined')
 
 ggplot() +  
   geom_tile(data = cluster_df, aes(longitude, latitude, fill = factor(value2))) + 
@@ -120,13 +103,20 @@ ggplot() +
         color = `Fossil sites`,
         shape = `Fossil sites`,
         size = `Fossil sites`),
-    stroke = 1.5, alpha = 0.8) +
-  scale_colour_manual(values = c(rep('#ff00de',3), '#3f2a14', rep('red', 2))) +
+    stroke = 1.75) +
+  scale_colour_manual(values = c(rep('#ff00de', 4), rep('red', 2))) +
   scale_shape_manual(values = c(1,21,22,25,4,3)) +
-  scale_size_manual(values = c(1,5,4,1,1,1)) +
+  scale_size_manual(values = c(3,5,5,2,1.5,1.5)) +
+  geom_path(data = day1, aes(Long, Lat), size = 0.5, alpha = 0.3) +
+  geom_path(data = day2, aes(Long, Lat), size = 0.5, alpha = 0.3) +
+  geom_path(data = day3, aes(Long, Lat), size = 0.5, alpha = 0.3) +
+  geom_path(data = day4, aes(Long, Lat), size = 0.5, alpha = 0.3) +
+  geom_path(data = day7, aes(Long, Lat), size = 0.5, alpha = 0.3) +
+  geom_path(data = day9, aes(Long, Lat), size = 0.5, alpha = 0.3) +
+  geom_path(data = day10, aes(Long, Lat), size = 0.5, alpha = 0.3) +
   theme_minimal() + labs(fill = 'k clusters')
 
-ggsave('kmeansGorongosa_Figure_03.tiff', last_plot(), width = 8, height = 6, device = 'tiff', scale = 1.3, dpi = 'retina', type = 'cairo')
+ggsave('kmeansGorongosa_Figure_03.png', last_plot(), width = 8, height = 6, device = 'png', scale = 1.3, dpi = 'retina', type = 'cairo')
 
 # generate variable importance
 library(randomForest)
@@ -166,4 +156,25 @@ ggplot(impDF, aes(x = varnames, y = MeanDecreaseAccuracy, color = as.factor(varn
   ylab("average increase in prediction error as a variable is permuted (%IncMSE)") + xlab("") +
   coord_flip() + theme_minimal()
 
-ggsave('kmeansGorongosa_Figure_04.tiff', last_plot(), width = 9, height = 3.75, device = 'tiff', scale = 0.75,  dpi = 'retina', type = 'cairo')
+ggsave('kmeansGorongosa_Figure_04.png', last_plot(), width = 9, height = 3.75, device = 'png', scale = 0.75,  dpi = 'retina', type = 'cairo')
+
+# Figure 5
+
+data_tbl <- readRDS('data_tbl.rds')
+long_data_tbl <- data_tbl %>%
+  gather(5:11, key = Band, value = "Value") %>%
+  mutate_if(is_character, factor)
+
+long_data_tbl$cluster <- factor(long_data_tbl$cluster, c("Fossil Sites", 1:8))
+levels(long_data_tbl$cluster) <- c("Fossil Sites", paste("Cluster", 1:8))
+long_data_tbl$Band <- factor(long_data_tbl$Band, c('ultrablue', 'blue', 'green', 'red', 'nearinfrared', 'SWIR1', 'SWIR2'))
+
+ggplot(long_data_tbl) + 
+  geom_violin(aes(x = cluster, y = Value, fill = cluster), trim = FALSE, scale = "width") +
+  scale_fill_manual(values = c('#ff00de', my_palette), guide = guide_legend(title = "Key", ncol = 3, direction = "horizontal"))  +
+  facet_wrap(~ Band, scales = "free") + theme_bw() + labs(x = '', y = '') + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), legend.position = c(0.7, 0.1)) +
+  theme(strip.background = element_rect(fill = my_palette[[8]])) +
+  theme(strip.text = element_text(colour = 'white', face = "bold"))
+
+ggsave('kmeansGorongosa_Figure_05.png', last_plot(), width = 6, height = 6, device = 'png', scale = 1, dpi = 'retina', type = 'cairo')
