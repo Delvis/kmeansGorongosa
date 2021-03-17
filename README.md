@@ -4,13 +4,9 @@ Feature extraction for finding fossiliferous deposits in the lower Mazamba forma
 ~
 
 + kmeans clustering
-+ visualizations
++ helper file for figure 1 barplot and map of Africa
++ binarized version of the kmeans output (cluster 1 vs all the other clusters)
 + variable importance (randomForest) 
++ visualizations for Fig 1-6
 
-Update 1 (18th of January 2021)
-
-Now it includes
-
-+ maxEnt one-class detection of fossil sites
-+ DEM (Elevation and Slope added to the model)
-+ visualizations
+Use main.R for running the core of the protocol.

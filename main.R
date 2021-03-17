@@ -68,7 +68,7 @@ my_palette <- c("#fefff2", rev(viridis::cividis(n = 7)))
 ds16_17 <- coo[-c(12:15),] # removes gpl 9 to 12b, because this is plot before going to the field
 ds16_17 <- ds16_17[ds16_17$`Fossil sites` != 'Non-localities 2018',]
 
-# Figure 2
+# Figure 3
 
 ggplot() +  
   geom_tile(data = cluster_df, aes(longitude, latitude, fill = factor(value))) + 
@@ -85,10 +85,10 @@ ggplot() +
   scale_size_manual(values = c(3,5,5,2,1.5)) +
   theme_minimal() + labs(fill = 'k clusters')
 
-ggsave('kmeansGorongosa_Figure_02.png', last_plot(), width = 8, height = 6,
+ggsave('kmeansGorongosa_Figure_03.png', last_plot(), width = 8, height = 6,
        device = 'png', scale = 1.3, dpi = 'retina', type = 'cairo')
 
-# Figure 3
+# Figure 5
 
 cluster_df$value2 <- cluster_df$value != 1
 cluster_df$value2 <- as.factor(cluster_df$value2)
@@ -116,7 +116,7 @@ ggplot() +
   geom_path(data = day10, aes(Long, Lat), size = 0.5, alpha = 0.3) +
   theme_minimal() + labs(fill = 'k clusters')
 
-ggsave('kmeansGorongosa_Figure_03.png', last_plot(), width = 8, height = 6, device = 'png', scale = 1.3, dpi = 'retina', type = 'cairo')
+ggsave('kmeansGorongosa_Figure_05.png', last_plot(), width = 8, height = 6, device = 'png', scale = 1.3, dpi = 'retina', type = 'cairo')
 
 # generate variable importance
 library(randomForest)
@@ -147,18 +147,8 @@ rownames(impDF) <- NULL
 # nice colours: 
 clrplts <- c("#5034db","#3498db","#2ecc71","#e74c3c","#c0392b","#e73c64","#e73cb1")
 
+
 # Figure 4
-
-ggplot(impDF, aes(x = varnames, y = MeanDecreaseAccuracy, color = as.factor(varnames))) + 
-  geom_segment(aes(x = varnames, xend = varnames, y = 0, yend = MeanDecreaseAccuracy), size = 3) +
-  geom_point(aes(y = cluster1), size = 3, shape = 21, fill = 'white', stroke = 2) +
-  scale_color_manual(values = clrplts, guide = FALSE) +
-  ylab("average increase in prediction error as a variable is permuted (%IncMSE)") + xlab("") +
-  coord_flip() + theme_minimal()
-
-ggsave('kmeansGorongosa_Figure_04.png', last_plot(), width = 9, height = 3.75, device = 'png', scale = 0.75,  dpi = 'retina', type = 'cairo')
-
-# Figure 5
 
 data_tbl <- readRDS('data_tbl.rds')
 long_data_tbl <- data_tbl %>%
@@ -168,6 +158,7 @@ long_data_tbl <- data_tbl %>%
 long_data_tbl$cluster <- factor(long_data_tbl$cluster, c("Fossil Sites", 1:8))
 levels(long_data_tbl$cluster) <- c("Fossil Sites", paste("Cluster", 1:8))
 long_data_tbl$Band <- factor(long_data_tbl$Band, c('ultrablue', 'blue', 'green', 'red', 'nearinfrared', 'SWIR1', 'SWIR2'))
+levels(long_data_tbl$Band) <- c('A) ultrablue', 'B) blue', 'C) green', 'D) red', 'E) nearinfrared', 'F) SWIR1', 'G) SWIR2')
 
 ggplot(long_data_tbl) + 
   geom_violin(aes(x = cluster, y = Value, fill = cluster), trim = FALSE, scale = "width") +
@@ -177,4 +168,16 @@ ggplot(long_data_tbl) +
   theme(strip.background = element_rect(fill = my_palette[[8]])) +
   theme(strip.text = element_text(colour = 'white', face = "bold"))
 
-ggsave('kmeansGorongosa_Figure_05.png', last_plot(), width = 6, height = 6, device = 'png', scale = 1, dpi = 'retina', type = 'cairo')
+ggsave('kmeansGorongosa_Figure_04.png', last_plot(), width = 6, height = 6, device = 'png', scale = 1, dpi = 'retina', type = 'cairo')
+
+
+# Figure 6
+
+ggplot(impDF, aes(x = varnames, y = MeanDecreaseAccuracy, color = as.factor(varnames))) + 
+  geom_segment(aes(x = varnames, xend = varnames, y = 0, yend = MeanDecreaseAccuracy), size = 3) +
+  geom_point(aes(y = cluster1), size = 3, shape = 21, fill = 'white', stroke = 2) +
+  scale_color_manual(values = clrplts, guide = FALSE) +
+  ylab("average increase in prediction error as a variable is permuted (%IncMSE)") + xlab("") +
+  coord_flip() + theme_minimal()
+
+ggsave('kmeansGorongosa_Figure_06.png', last_plot(), width = 9, height = 3.75, device = 'png', scale = 0.75,  dpi = 'retina', type = 'cairo')
