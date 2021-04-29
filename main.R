@@ -96,7 +96,7 @@ levels(cluster_df$value2) <- c('Fossils (Prediction)', 'Other 7 clusters combine
 
 ggplot() +  
   geom_tile(data = cluster_df, aes(longitude, latitude, fill = factor(value2))) + 
-  scale_fill_manual(values = c(my_palette[[1]], my_palette[[7]])) + coord_equal() +
+  scale_fill_manual(values = c(my_palette[[1]], my_palette[[8]])) + coord_equal() +
   geom_point(
     data = coo,
     aes(Long, Lat,
