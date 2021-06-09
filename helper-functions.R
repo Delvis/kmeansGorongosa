@@ -49,7 +49,7 @@ ggplot(mgap, aes(x = temporal_intervals, y =  richness, fill = lmio)) + geom_col
   annotate("errorbarh", y = 34, xmin = 6.45, xmax = 10.45, colour = "#f1c40f", size = 1.5) +
   annotate("text", x = 17, y = 33.9, label = 'Barba-Montoya et al. (2017)', colour = "#f1c40f") +
   annotate("errorbarh", y = 33, xmin = 7.8, xmax = 8.9, colour = "#8e44ad", size = 1.5) + 
-  annotate("text", x = 17, y = 32.8, label = 'dos Reis and Young (2019)', colour = "#8e44ad") +
+  annotate("text", x = 17, y = 32.8, label = 'dos Reis and Yang (2019)', colour = "#8e44ad") +
   theme_void() + theme(axis.text.x = element_text(angle = 45))
 
 ggsave('FINAL_PAPER_00_helper.tiff', last_plot(), device = 'tiff', scale = 1, dpi = 'retina', type = "cairo")
